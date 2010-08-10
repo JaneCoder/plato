@@ -5,17 +5,20 @@
 
 Gem::Specification.new do |s|
   s.name = %q{plato}
-  s.version = "0.0.0"
+  s.version = "0.0.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Matt Freels"]
   s.date = %q{2010-08-10}
+  s.default_executable = %q{plato}
   s.description = %q{use templates and content to generate static sites.}
   s.email = %q{matt@freels.name}
+  s.executables = ["plato"]
   s.files = [
     ".gitignore",
      "Rakefile",
      "VERSION",
+     "bin/plato",
      "lib/plato.rb",
      "lib/plato/config.rb",
      "lib/plato/document.rb",
@@ -23,7 +26,8 @@ Gem::Specification.new do |s|
      "lib/plato/path_template.rb",
      "lib/plato/rendering.rb",
      "lib/plato/repo.rb",
-     "lib/plato/site.rb"
+     "lib/plato/site.rb",
+     "plato.gemspec"
   ]
   s.homepage = %q{http://github.com/freels/plato}
   s.rdoc_options = ["--charset=UTF-8"]
