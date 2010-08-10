@@ -1,0 +1,6 @@
+.DS_Store
+/pkg
+/content
+/template
+/resources
+/config.rb
