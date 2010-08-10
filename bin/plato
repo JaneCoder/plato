@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+require 'plato'
+
+# bare-bones for now...
+Plato::Site.new.generate!
