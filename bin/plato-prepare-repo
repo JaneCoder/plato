@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+
+system "git status > /dev/null"
+exit $? if $? != 0
+
+GEM_DIR = File.expand_path('../..', __FILE__)
+
+system "git config --add receive.denyCurrentBranch ignore"
+
+hook = File.expand_path('dist/hooks/post-receive', GEM_DIR)
+system "cp #{hook} .git/hooks/post-receive && chmod a+x .git/hooks/post-receive"
+
+puts <<-END_HELP
+#{'-' * 75}
+
+Repo at #{File.expand_path('.')} configured for remote updates.
+Add this repo as a remote for your content and updates will be compiled to
+
+#{File.expand_path('.')}/cache.
+
+#{'-' * 75}
+END_HELP
+
+
