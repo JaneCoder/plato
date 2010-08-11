@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+require 'fileutils'
+
+git_dir = ENV['GIT_DIR'] = File.expand_path(ENV['GIT_DIR'])
+
+FileUtils.cd '..'
+system "env GIT_DIR=#{git_dir} git reset --hard HEAD >> /tmp/post-receive 2>&1"
+system "plato >> /tmp/post-receive 2>&1"
