@@ -1,7 +1,2 @@
 .DS_Store
 /pkg
-/content
-/template
-/resources
-/cache
-/config.rb
