@@ -40,6 +40,6 @@ unless opts['base_url']
   exit 1
 end
 
-puts "Generating site..."
+puts "Compiling site..."
 Plato::Site.new(*opts.values_at('base_url', 'template', 'cache', 'root')).generate!
 puts "done!"
