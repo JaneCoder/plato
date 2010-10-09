@@ -23,7 +23,7 @@ module Plato
         rendered_templates.save_to(cache_path),
         rendered_content.save_to(cache_path)
       ].each do |ps|
-        puts ps.map{|s| " » #{s}" }
+        puts ps.map{|s| " » #{File.join(cache_path,s)}" }
       end
     end
 
