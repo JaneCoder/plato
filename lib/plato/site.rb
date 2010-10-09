@@ -18,10 +18,13 @@ module Plato
 
     def generate!
       RenderContext.load_view_helpers(File.join(template_path, 'view_helpers.rb'))
-      resources.save_to(cache_path)
-      template_resources.save_to(cache_path)
-      rendered_templates.save_to(cache_path)
-      rendered_content.save_to(cache_path)
+      [ resources.save_to(cache_path),
+        template_resources.save_to(cache_path),
+        rendered_templates.save_to(cache_path),
+        rendered_content.save_to(cache_path)
+      ].each do |ps|
+        puts ps.map{|s| " » #{s}" }
+      end
     end
 
     DETECT_EXT = /(?:(.*)\/)?([^\/]+)\.([^.]+)\Z/

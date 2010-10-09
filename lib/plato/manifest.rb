@@ -22,7 +22,7 @@ module Plato
 
     def save_to(path, codec = nil)
       repo = Repo.new(path, codec || self.codec)
-      @contents.each {|path, hash| repo.save(path, hash) }
+      @contents.map {|path, hash| repo.save(path, hash); path }
     end
 
     def [](key)
