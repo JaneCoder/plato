@@ -1,9 +1,19 @@
 module Plato
   class Site
-    attr_accessor :root
+    attr_reader :base_url
+    attr_reader :root
+    attr_reader :template_path, :config_path, :content_path, :resources_path, :cache_path
 
-    def initialize(root = '.')
-      @root = File.expand_path(root)
+    def initialize(base_url, template = 'template', cache = 'cache', root = '.')
+      @base_url = base_url
+      @root     = File.expand_path(root)
+
+      @cache_path     = File.expand_path(cache, @root)
+      @template_path  = detect_zip_path File.expand_path(template, @root)
+
+      @config_path    = File.join(@template_path, 'config.rb')
+      @content_path   = File.join(@root, "content")
+      @resources_path = File.join(@root, "resources")
     end
 
     def generate!
@@ -14,13 +24,18 @@ module Plato
       rendered_content.save_to(cache_path)
     end
 
-    def base_url; config['base_url'] end
+    DETECT_EXT = /(?:(.*)\/)?([^\/]+)\.([^.]+)\Z/
+    def detect_zip_path(path)
+      path = "#{path}.zip" if !File.exist? path and File.exist? "#{path}.zip"
 
-    def config_path; File.join(root, "config.rb") end
-    def template_path; File.join(root, "template") end
-    def content_path; File.join(root, "content") end
-    def resources_path; File.join(root, "resources") end
-    def cache_path; File.join(root, "cache") end
+      if File.exist? path and !File.directory? path and path.match(DETECT_EXT)
+        dir, base, ext = path.match(DETECT_EXT).values_at(1,2,3)
+
+        [dir, "#{base}.#{ext}!", base].compact.join("/")
+      else
+        path
+      end
+    end
 
     def config
       @config ||= Config.read(ConfigDSL, File.read(config_path))
@@ -31,7 +46,7 @@ module Plato
 
       manifest = Manifest.new template_path, {
         :codec => :template,
-        :filter => lambda {|p| p !~ /\Aview_helpers\.rb/ }
+        :filter => lambda {|p| p !~ /\A(config\.rb|view_helpers\.rb)/ }
       }
 
       path_parser = PathTemplate.new(":name*.:format.:engine")

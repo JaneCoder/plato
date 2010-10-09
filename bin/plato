@@ -1,6 +1,43 @@
 #!/usr/bin/env ruby
 
 require 'plato'
+require 'yaml'
+require 'optparse'
 
-# bare-bones for now...
-Plato::Site.new.generate!
+opts = {
+  'root'     => '.',
+  'template' => 'template',
+  'cache'    => 'cache'
+}
+
+op = OptionParser.new {|op|
+  op.on('-s url')       {|val| opts['base_url'] = val }
+  op.on('-d dir')       {|val| opts['root']     = val }
+  op.on('-t template')  {|val| opts['template'] = val }
+  op.on('-c cache')     {|val| opts['cache']    = val }
+  op.on('-h', '--help') { puts op }
+}
+
+op.parse!(ARGV.dup)
+
+platorc = File.join(opts['root'], 'platorc')
+
+if File.exist? platorc
+  begin
+    opts.update YAML.load_file(platorc)
+  rescue
+    $stderr.puts "Error reading from platorc."; exit 2
+  end
+end
+
+
+# error checking
+
+unless opts['base_url']
+  $stderr.puts "Error: Must specify a base site url: plato -s URL"
+  $stderr.puts "\n"
+  $stderr.puts op
+  exit 1
+end
+
+Plato::Site.new(*opts.values_at('base_url', 'template', 'cache', 'root')).generate!

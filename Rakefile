@@ -22,7 +22,8 @@ begin
     gemspec.email = "matt@freels.name"
     gemspec.homepage = "http://github.com/freels/plato"
     gemspec.authors = ["Matt Freels"]
-    gemspec.add_dependency 'tilt', '>= 1.0.1'
+    gemspec.add_dependency 'tilt', '~> 1.0.1'
+    gemspec.add_dependency 'ruby_archive', '~> 0.1.2'
 
     # development
     gemspec.add_development_dependency 'rspec'

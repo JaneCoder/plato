@@ -1,4 +1,5 @@
 require 'tilt'
+require 'ruby_archive'
 
 module Plato
   require 'plato/config'
