@@ -5,5 +5,5 @@ require 'fileutils'
 git_dir = ENV['GIT_DIR'] = File.expand_path(ENV['GIT_DIR'])
 
 FileUtils.cd '..'
-system "env GIT_DIR=#{git_dir} git reset --hard HEAD"
-system "plato"
+system "env GIT_DIR=#{git_dir} git reset --hard HEAD > /tmp/plato-post-receive 2>&1"
+system "plato -c cache_new && mv cache cache_last && mv cache_new cache >> /tmp/plato-post-receive 2>&1"
