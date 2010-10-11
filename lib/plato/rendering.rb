@@ -74,14 +74,4 @@ module Plato
       %{<script #{attribute_pairs(opts)}></script>}
     end
   end
-
-  class RubyTiltTemplate < Tilt::Template
-    def prepare; end
-
-    def precompiled_template(locals)
-      data
-    end
-  end
-
-  ::Tilt.register('rb', RubyTiltTemplate)
 end

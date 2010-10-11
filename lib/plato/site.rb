@@ -14,17 +14,64 @@ module Plato
       @config_path    = File.join(@template_path, 'config.rb')
       @content_path   = File.join(@root)
       @resources_path = File.join(@root, "resources")
+
+      RenderContext.load_view_helpers(File.join(@template_path, 'view_helpers.rb'))
     end
 
     def generate!
-      RenderContext.load_view_helpers(File.join(template_path, 'view_helpers.rb'))
-      [ resources.save_to(cache_path),
-        template_resources.save_to(cache_path),
-        rendered_templates.save_to(cache_path),
-        rendered_content.save_to(cache_path)
-      ].each do |ps|
-        puts ps.map{|s| " » #{File.join(cache_path,s)}" }
+      [ ["resources",          resources],
+        ["template resources", template_resources],
+        ["rendered templates", rendered_templates],
+        ["rendered content",   rendered_content]
+      ].each do |(name, manifest)|
+        puts "## #{name}:"
+        manifest.save_to(cache_path)
+        manifest.to_h.keys.map{|p| File.join cache_path, p }.each do |path|
+          puts "    #{path}"
+        end
       end
+    end
+
+    def config
+      @config ||= Config.read(ConfigDSL, File.read(config_path))
+    end
+
+    def templates
+      initialize_templates! unless @templates
+      @templates
+    end
+
+    def template_resources
+      initialize_templates! unless @templates
+      @template_resources
+    end    
+
+    def content
+      return @content if @content
+
+      @content = config["content_categories"]
+      categories = @content.values
+      content_repos = @content.keys.map do |c|
+        Repo.new(File.join(content_path, c))
+      end
+
+      content_repos.each do |repo|
+        repo.each do |path, file|
+          if category = categories.find {|c| c.match path }
+            data = category.match(path).merge(
+              HeadersCodec.inflate(file.read)
+            )
+
+            category.documents << Document.new(category, data)
+          end
+        end
+      end
+
+      @content
+    end
+
+    def resources
+      @resources ||= Manifest.new(Repo.new(resources_path))
     end
 
     DETECT_EXT = /(?:(.*)\/)?([^\/]+)\.([^.]+)\Z/
@@ -40,70 +87,34 @@ module Plato
       end
     end
 
-    def config
-      @config ||= Config.read(ConfigDSL, File.read(config_path))
-    end
-
-    def templates
-      return @templates if @templates
-
-      manifest = Manifest.new template_path, {
-        :codec => :template,
-        :filter => lambda {|p| p !~ /\A(config\.rb|view_helpers\.rb)/ }
-      }
-
+    def initialize_templates!
       path_parser = PathTemplate.new(":name*.:format.:engine")
       sass_parser = PathTemplate.new(":name*.sass")
 
-      @template_resources = Manifest.new({}, :refs)
-      @templates = manifest.map do |path, template|
-        if template.is_a? String
-          # could not find a template engine, assume we're a raw resource
-          @template_resources[path] = template
-          nil
-        else
+      @template_resources = Manifest.new
+      @templates = {}
+
+      Repo.new(template_path).each do |path, file|
+        next if path =~ /\A(config\.rb|view_helpers\.rb)/
+
+        if tilt_class = Tilt[path]
+          tilt = tilt_class.new(File.join(template_path, path))
+
           if match = path_parser.parse(path)
             name, format = match.values_at("name", "format")
-            { "#{name}.#{format}" => Template.new(template, format) }
+            @templates["#{name}.#{format}"] = Template.new(tilt, format)
+
           else name = sass_parser.parse(path).values_at("name")
-            { "#{name}.css" => Template.new(template, 'css') }
+            @templates["#{name}.css"] = Template.new(tilt, 'css')
           end
+        else
+          # could not find a template engine, assume we're a raw resource
+          @template_resources[path] = file
+          nil
         end
       end
     end
-
-    def content
-      return @content if @content
-
-      @content = config["content_categories"]
-      categories = @content.values
-      content_manifests = @content.keys.map do |c|
-        Manifest.new(File.join(content_path, c), :hash)
-      end
-
-      content_manifests.each do |manifest|
-        manifest.each do |path, content_data|
-          if category = categories.find {|c| c.match path }
-            data = category.match(path).merge(content_data)
-
-            category.documents << Document.new(category, data)
-          end
-        end
-      end
-
-      @content
-    end
-
-    def template_resources
-      templates unless @templates
-      @template_resources
-    end
-
-    def resources
-      @resources ||= Manifest.new(resources_path, :refs)
-    end
-
-
+    
     # helpers
 
     Template = Struct.new(:renderer, :format)
@@ -117,7 +128,7 @@ module Plato
     end
 
     def rendered_templates
-      templates.map(:string) do |path, template|
+      Manifest.new(templates).map do |path, template|
         if path !~ /\A_/
           { path => render(template, template.format, nil) }
         end
