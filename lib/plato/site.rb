@@ -118,9 +118,7 @@ module Plato
 
     def rendered_templates
       templates.map(:string) do |path, template|
-        if path =~ /\A_/
-          nil
-        else
+        if path !~ /\A_/
           { path => render(template, template.format, nil) }
         end
       end
