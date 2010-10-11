@@ -12,7 +12,7 @@ module Plato
       @template_path  = detect_zip_path File.expand_path(template, @root)
 
       @config_path    = File.join(@template_path, 'config.rb')
-      @content_path   = File.join(@root, "content")
+      @content_path   = File.join(@root)
       @resources_path = File.join(@root, "resources")
     end
 
@@ -77,13 +77,17 @@ module Plato
 
       @content = config["content_categories"]
       categories = @content.values
-      manifest = Manifest.new(content_path, :hash)
+      content_manifests = @content.keys.map do |c|
+        Manifest.new(File.join(content_path, c), :hash)
+      end
 
-      manifest.each do |path, content_data|
-        if category = categories.find {|c| c.match path }
-          data = category.match(path).merge(content_data)
+      content_manifests.each do |manifest|
+        manifest.each do |path, content_data|
+          if category = categories.find {|c| c.match path }
+            data = category.match(path).merge(content_data)
 
-          category.documents << Document.new(category, data)
+            category.documents << Document.new(category, data)
+          end
         end
       end
 
