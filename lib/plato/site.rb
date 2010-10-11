@@ -98,7 +98,8 @@ module Plato
         next if path =~ /\A(config\.rb|view_helpers\.rb)/
 
         if tilt_class = Tilt[path]
-          tilt = tilt_class.new(File.join(template_path, path))
+          tilt_opts = config["options"][Tilt.mappings.index(tilt_class).to_sym]
+          tilt = tilt_class.new(File.join(template_path, path), tilt_opts || {})
 
           if match = path_parser.parse(path)
             name, format = match.values_at("name", "format")
